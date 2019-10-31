@@ -20,9 +20,9 @@ support for wxPython.
 
 Description
 ===========
-Before the introduction of coroutines, developers for GUI applications have to ways
-to handle time-consuming tasks. One of them is ``wx.Yield()`` which periodically
-yield the control to wxPython and let events to be processed. This is straitforward
+Before the introduction of coroutines, developers for GUI applications had two ways
+to handle time-consuming tasks. One of them is ``wx.Yield()`` which
+yields the control to the event loop and let events to be processed. This is straitforward
 but performance issues are usually encountered, and users may frequently observe lags
 or busy cursors. Another one of them is to launch the task in another thread, however
 due to the complexity of GUI frameworks, UI elements can only be updated in the main
@@ -31,17 +31,17 @@ logic increases, developers will eventually realize that they have already felt 
 the so-called "Callback Hell", and they will spend most of their time in taking care of
 the program states among these callbacks, because the program logic is usually in series
 but the program must be implemented in an asynchronous way. Considering such a situation:
-When a button is clicked a file will be downloaded, and then a CPU-intensive thread will
+When a button is clicked, a file will be downloaded, and then a CPU-intensive thread will
 be launched to process the data. With bare ``wx.CallAfter()`` there will be at least two
 callbacks, and what will happen if we need more, for example retrying the download when
 it fails?
 
 Coroutines are introduced to solve this problem. Time-consuming or IO-bound tasks can be
 wrapped into "awaitables" and ``await``-ed in coroutines; a coroutine will be
-automatically suspended when it is trapped in an "awaitable", and woke up when the task
+automatically suspended when it is trapped in an "awaitable", and woken up when the task
 finishes. Additionally, as all coroutines (all coroutines launched in the main event
 loop, exactly) will be executed in the main thread, there will be no worry about any
-confilction caused by concurrency in the program logic.
+conflicts caused by concurrency in the program logic.
 
 Usage
 =====
@@ -118,7 +118,6 @@ Sample usage::
 
 """
 
-#!/usr/bin/env python3
 import asyncio
 import concurrent.futures
 import threading
