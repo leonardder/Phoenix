@@ -98,7 +98,10 @@ __date__ = "31 March 2009"
 
 import wx
 # just for isinstance
-import time
+try:
+    from time import time, process_time as clock
+except ImportError:
+    from time import time, clock
 import warnings
 
 import six
@@ -124,9 +127,6 @@ if wx.Platform == "__WXMSW__":
         _winxptheme = True
     except ImportError:
         pass
-
-# wxPython version string
-_VERSION_STRING = wx.VERSION_STRING
 
 # AUI Events
 wxEVT_AUI_PANE_BUTTON = wx.NewEventType()
@@ -3213,12 +3213,7 @@ class AuiFloatingFrame(wx.MiniFrame):
         self._last2_rect = wx.Rect(*self._last_rect)
         self._last_rect = wx.Rect(*win_rect)
 
-        if _VERSION_STRING < "2.9":
-            leftDown = wx.GetMouseState().LeftDown()
-        else:
-            leftDown = wx.GetMouseState().LeftIsDown()
-
-        if not leftDown:
+        if not wx.GetMouseState().LeftIsDown():
             return
 
         if not self._moving:
@@ -3248,12 +3243,7 @@ class AuiFloatingFrame(wx.MiniFrame):
         """
 
         if self._moving:
-            if _VERSION_STRING < "2.9":
-                leftDown = wx.GetMouseState().LeftDown()
-            else:
-                leftDown = wx.GetMouseState().LeftIsDown()
-
-            if not leftDown:
+            if not wx.GetMouseState().LeftIsDown():
                 self._moving = False
                 self.OnMoveFinished()
             else:
@@ -3363,12 +3353,7 @@ class AuiFloatingFrame(wx.MiniFrame):
         if self._fly_timer.IsRunning():
             return
 
-        if _VERSION_STRING < "2.9":
-            leftDown = wx.GetMouseState().LeftDown()
-        else:
-            leftDown = wx.GetMouseState().LeftIsDown()
-
-        if leftDown:
+        if wx.GetMouseState().LeftIsDown():
             return
 
         rect = wx.Rect(*self.GetScreenRect())
@@ -4603,13 +4588,13 @@ class AuiManager(wx.EvtHandler):
                     klass.RemoveEventHandler(handler)
 
 
-    def OnClose(self, ev):
+    def OnClose(self, event):
         """Called when the managed window is closed. Makes sure that :meth:`UnInit`
         is called.
         """
 
-        ev.Skip()
-        if ev.GetEventObject() == self._frame:
+        event.Skip()
+        if event.GetEventObject() == self._frame:
             wx.CallAfter(self.UnInit)
 
 
@@ -4769,8 +4754,8 @@ class AuiManager(wx.EvtHandler):
 
         # if the pane's name identifier is blank, create a random string
         if pinfo.name == "" or already_exists:
-            pinfo.name = ("%s%08x%08x%08x") % (pinfo.window.GetName(), int(time.time()),
-                                               int(time.clock()), len(self._panes))
+            pinfo.name = ("%s%08x%08x%08x") % (pinfo.window.GetName(), int(time()),
+                                               int(clock()), len(self._panes))
 
         # set initial proportion (if not already set)
         if pinfo.dock_proportion == 0:
@@ -8252,12 +8237,7 @@ class AuiManager(wx.EvtHandler):
 
         if part.rect.Contains(pt):
 
-            if _VERSION_STRING < "2.9":
-                leftDown = wx.GetMouseState().LeftDown()
-            else:
-                leftDown = wx.GetMouseState().LeftIsDown()
-
-            if leftDown:
+            if wx.GetMouseState().LeftIsDown():
                 state = AUI_BUTTON_STATE_PRESSED
             else:
                 state = AUI_BUTTON_STATE_HOVER
@@ -9924,12 +9904,7 @@ class AuiManager(wx.EvtHandler):
         # when release the button out of the window.
         # TODO: a better fix is needed.
 
-        if _VERSION_STRING < "2.9":
-            leftDown = wx.GetMouseState().LeftDown()
-        else:
-            leftDown = wx.GetMouseState().LeftIsDown()
-
-        if not leftDown:
+        if not wx.GetMouseState().LeftIsDown():
             self._action = actionNone
             self.OnLeftUp_DragToolbarPane(eventOrPt)
 

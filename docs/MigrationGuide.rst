@@ -599,17 +599,79 @@ drop the version number from the pip command above.
 wx.html.HtmlWindow.OnOpeningURL
 -------------------------------
 
-In Classic the return value of ``wx.html.HtmlWindow.OnOpeningURL`` could be
-either a value from the ``wx.html.HtmlOpeningStatus`` enumeration, or a string
-containing the URL to redirect to. In Phoenix this has been changed to a simpler
-wrapper implementation which requires that both an enum value and a string be
-returned as a tuple. For example::
+In wxPython Classic the return value of ``wx.html.HtmlWindow.OnOpeningURL`` and
+``wx.html.HtmlWindowInterface.OnHTMLOpeningURL`` could be either a value from the
+``wx.html.HtmlOpeningStatus`` enumeration, or a string containing the URL to
+redirect to. 
+
+In Phoenix this has been changed to a simpler wrapper implementation which
+requires that both an enum value and a string be returned as a tuple. For
+example::
 
     def OnHTMLOpeningURL(self, urlType, url):
         if urlType == wx.html.HTML_URL_IMAGE and url != self.otherURL:
             return (wx.html.HTML_REDIRECT, self.otherURL)
         return (wx.html.HTML_OPEN, "")
 
+
+wx.NewId is deprecated
+----------------------
+
+:func:`wx.NewId` has been used forever in wxWidgets and wxPython to generate an
+ID for use as the ID for controls, menu items, and similar things. It's really
+quite a stupid implementation however, in that it simply increments a counter
+and returns that value. There is no way for it to check if the ID is already in
+use, for example if the programmer used some static numbers for IDs, or if the
+counter wrapped around the max integer value and started over at the min integer
+value.
+
+So a few years ago the wxWidgets team implemented a reference counting scheme
+for the ID values, and started using it internally. In a more recent release the
+``wx.NewId`` function was deprecated. Then, even more recently, when code
+was added to Phoenix's generator tools to automatically deprecate things that
+are marked as deprecated in wxWidgets, then it became deprecated for us too.
+
+The recommended alternative to ``wx.NewId`` is to just use ``wx.ID_ANY`` when
+creating your widgets or other items with IDs. That will use the reference
+counted ID scheme internally and the ID will be reserved until that item is
+destroyed. In those cases where you would prefer to have items with the same ID,
+or to reuse ID values for some other reason, then you should use the
+:func:`wx.NewIdRef` function instead. It returns a :class:`wx.WindowIDRef`
+object that can be compared with each other, sorted, used as a dictionary key,
+converted to the actual integer value of the ID, etc.
+
+
+wx.WS_EX_VALIDATE_RECURSIVELY is obsolete
+-----------------------------------------
+
+The wx.WS_EX_VALIDATE_RECURSIVELY extended style flag is obsolete, as it is
+now the default (and only) behavior. The style flag has been added back into
+wxPython for compatibility, but with a zero value. You can just stop using it
+in your code with no change in behavior. 
+
+
+Parameter name changes in radial gradient methods
+-------------------------------------------------
+
+The parameter names for the ``wx.GraphicsContext`` methods for creating radial
+gradients have changed in wxPython 4.1 to be a little more understandable. If
+you are passing these values via their keyword names then you will need to
+change your code. The prior C++ method signatures looked like this::
+
+    virtual wxGraphicsBrush
+    CreateRadialGradientBrush(wxDouble xo, wxDouble yo,
+                              wxDouble xc, wxDouble yc,
+                              wxDouble radius,
+                              const wxGraphicsGradientStops& stops);
+
+And they now look like this::
+
+    virtual wxGraphicsBrush
+    CreateRadialGradientBrush(wxDouble startX, wxDouble startY,
+                              wxDouble endX, wxDouble endY,
+                              wxDouble radius,
+                              const wxGraphicsGradientStops& stops,
+                              const wxGraphicsMatrix& matrix = wxNullGraphicsMatrix);
 
 
 .. toctree::

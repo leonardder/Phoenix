@@ -206,6 +206,7 @@ class VariableDef(BaseDef):
         self.definition = ''
         self.argsString = ''
         self.pyInt = False
+        self.noSetter = False
         self.__dict__.update(**kw)
         if element is not None:
             self.extract(element)
@@ -247,6 +248,8 @@ class MemberVarDef(VariableDef):
         super(MemberVarDef, self).__init__()
         self.isStatic = False
         self.protection = 'public'
+        self.getCode = ''
+        self.setCode = ''
         self.__dict__.update(kw)
         if element is not None:
             self.extract(element)
@@ -598,6 +601,10 @@ class MethodDef(FunctionDef):
             self.ignore()
 
 
+    def setVirtualCatcherCode(self, code):
+        """
+        """
+        self.virtualCatcherCode = code
 
 
 #---------------------------------------------------------------------------
@@ -741,8 +748,12 @@ class ClassDef(BaseDef):
         for node in element.findall('includes'):
             self.includes.append(node.text)
         for node in element.findall('templateparamlist/param'):
-            txt = node.find('type').text
-            txt = txt.replace('class ', '')
+            if node.find('declname') is not None:
+                txt = node.find('declname').text
+            else:
+                txt = node.find('type').text
+                txt = txt.replace('class ', '')
+                txt = txt.replace('typename ', '')
             self.templateParams.append(txt)
 
         for node in element.findall('innerclass'):
@@ -1078,6 +1089,13 @@ class ClassDef(BaseDef):
         self.addItem(WigCode(text))
 
 
+    def addDefaultCtor(self, prot='protected'):
+        # add declaration of a default constructor to this class
+        wig = WigCode("""\
+{PROT}:
+    {CLASS}();""".format(CLASS=self.name, PROT=prot))
+        self.addItem(wig)
+
     def addCopyCtor(self, prot='protected'):
         # add declaration of a copy constructor to this class
         wig = WigCode("""\
@@ -1087,6 +1105,9 @@ class ClassDef(BaseDef):
 
     def addPrivateCopyCtor(self):
         self.addCopyCtor('private')
+
+    def addPrivateDefaultCtor(self):
+        self.addDefaultCtor('private')
 
     def addPrivateAssignOp(self):
         # add declaration of an assignment opperator to this class
